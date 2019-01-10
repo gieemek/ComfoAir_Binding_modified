@@ -9,7 +9,7 @@ This new binding provides 160 commands, including 71 write commands. This gives 
 
 This binding was tested with the Zehnder ComfoAir 350 ventilation system. As original binding it should work with ComfoAir 550, WHR930 of StorkAir, G90-380 by Wernig and Santos 370 DC to Paul.
 
-### List of commands (original and new ones)
+### List of commands (original and new ones).
 
 | Command | Read / Write | Possible value | Description |
 | :------ | :----------: | :------------: | :---------- |
@@ -195,9 +195,27 @@ Menu 90 | | | |
 
 
 
-# ComfoAir Binding
+## How to install.
 
-This binding should be compatible with the Zehnder ComfoAir 350 ventilation system. ComfoAir 550 is untested but should supposedly use the same protocol. The same is true for the device WHR930 of StorkAir, G90-380 by Wernig and Santos 370 DC to Paul.
+Download `org.openhab.binding.comfoair-1.13.0.jar` file from this repository.<br/>
+
+**Important !** If you use the original *binding.comfoair*, you must uninstall it before substituting the new .jar file (Paper UI > Add-ons > Bindings > ComfoAir - uninstall).
+
+The *binding.comfoair* installation can be done in two ways:
+1. Upload the `org.openhab.binding.comfoair-1.13.0.jar` file to the `openhab\addons` directory.
+- openhab: `\openHAB\addons`
+- openhabian: `/usr/share/openhab2/addons`
+2. Copy the `org.openhab.binding.comfoair-1.13.0.jar` file to the directory in which the original *binding.comfoair* is located:
+- openhab: `\openHAB\userdata\tmp\mvn\org\openhab\binding\org.openhab.binding.comfoair`
+- openhabian: `/var/lib/openhab2/tmp/mvn/org/openhab/binding/org.openhab.binding.comfoair/1.13.0`<br/><br/>
+Confirm overwriting of the original file.<br/>
+If the original file is in a version other than 1.13.0, the name of the copied file should be renamed to the original *binding.comfoair* .jar file name.
+
+
+
+
+
+### The description below is the same as for the original *binding.comfoair*.
 
 ## Binding Configuration
 
@@ -220,39 +238,14 @@ port=/dev/ttyS0
 The syntax of the binding configuration strings accepted is the following:
 
 ```
-comfoair="<device-command>"
+comfoair="<command>"
 ```
 
-where `<device-command>` is replaced with the ComfoAir command from the list below:
-
-| `<device-command>`              | Read / Write | Notes |
-|---------------------------------|:------------:|-------|
-| activate                        | Write        | - 0 means CCEase Comfocontrol is active and the binding is in sleep state<br/>- 1 means Binding is active and CCEase Comfocontrol is in sleep state | 
-| fan_level                       | Write        | - 1 is Level A<br/>- 2 is Level 1<br/>- 3 is Level 2<br/>- 4 is Level 3 | 
-| target_temperature              | Write        | value between 15.0 and 25.0 in 0.5 steps |
-| outdoor_incomming_temperatur    | Read         |  |
-| outdoor_outgoing_temperatur     | Read         |  |
-| indoor_incomming_temperatur     | Read         |  |
-| indoor_outgoing_temperatur      | Read         |  |
-| incomming_fan                   | Read         |  |
-| outgoing_fan                    | Read         |  |
-| filter_running                  | Read         |  |
-| filter_error                    | Read         |  |
-| filter_error_intern             | Read         |  |
-| filter_error_extern             | Read         |  |
-| filter_reset                    | Write        | filterhours will be reset to 0 |
-| error_message                   | Read         |  |
-| ewt_temperatur                  | Read         |  |
-| ewt_temperatur_low              | Read         |  |
-| ewt_temperatur_high             | Read         |  |
-| ewt_speed                       | Read         |  |
-| ewt_mode                        | Read         |  |
-| bypass_mode                     | Read         |  |
-| error_reset                     | Write        | error messages will be reset |
+where `<command>` should be replaced with the ComfoAir command from the list above.
 
 ## Limitations
 
-- Either the ComfoAir binding or the CCEase Comfocontrol can be active
+- Either the ComfoAir binding or the CCEase Comfocontrol can be active, but not together.
 - You must implement auto mode by yourself with rules. But it is more powerful.
 
 ## Rights to access the serial port
