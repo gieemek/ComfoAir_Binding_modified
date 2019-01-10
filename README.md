@@ -211,11 +211,9 @@ The *binding.comfoair* installation can be done in two ways:
 Confirm overwriting of the original file.<br/>
 If the original file is in a version other than 1.13.0, the name of the copied file should be renamed to the original *binding.comfoair* .jar file name.
 
+Now you can install ComfoAir binding (Paper UI > Add-ons > Bindings > ComfoAir - install).
 
-
-
-
-### The description below is the same as for the original *binding.comfoair*.
+### The description below is very similar to the original *ComfoAir binding* readme file by Holger Hees.
 
 ## Binding Configuration
 
