@@ -269,6 +269,9 @@ Group	ComfoAir				"ComfoAir"					<recu>		(devices)
 Group	comfoairTemps_Chart									<temperature>	(ComfoAir)
 Number	comfoairTemps_Chart_Period		"Period"
 
+// Delay
+Switch	Delayed_Start
+
 // Control
 Number	comfoairControl				"Activate"					<computer>	(ComfoAir)		{comfoair="activate"}
 Number	comfoairFanLevel			"Ventilation level [%d]"			<chart>		(ComfoAir)		{comfoair="fan_level"}
