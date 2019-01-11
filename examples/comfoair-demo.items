@@ -8,6 +8,9 @@ Number	comfoairTemps_Chart_Period				"Period"
 // Delay
 Switch	Delayed_Start
 
+// Summer - Winter energy switch
+Switch	EnergySummerTime
+
 // Control
 Number	comfoairControl							"Activate"													<computer>		(ComfoAir)								{comfoair="activate"}
 Number	comfoairFanLevel							"Ventilation level [%d]"								<chart>			(ComfoAir)								{comfoair="fan_level"}
