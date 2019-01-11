@@ -1,0 +1,46 @@
+var String msg = "Error: "
+
+if (comfoairError.state instanceof StringType) {
+
+    if( comfoairError.state != "Ok" ) {
+    	msg = msg + comfoairError.state + ","
+    } else {
+    	msg = msg + "OK,"
+    }
+} else {
+	msg = msg + "communication failed,"
+}
+
+msg = msg + " Internal filter: "
+
+if( comfoairFilterErrorI.state instanceof DecimalType ) {
+	
+	if( comfoairFilterErrorI.state == 1 ) {
+		msg = msg + "NEED TO BE CHANGE,"
+	} else {
+		msg = msg + "OK,"
+	}
+} else {
+	msg = msg + "communication failed,"
+}
+
+msg = msg + " External filter: "
+
+if( comfoairFilterErrorE.state instanceof DecimalType ) {
+	
+	if( comfoairFilterErrorE.state == 1 ) {
+		msg = msg + "NEED TO BE CHANGE,"
+	} else {
+		msg = msg + "OK,"
+	}
+} else {
+	msg = msg + "communication failed,"
+}
+
+msg = msg + " Inlet: " + comfoairInletError.state
+
+if( comfoairFrozenError.state != "OK" ) {
+	msg = msg + ", Exchanger: " + comfoairFrozenError.state
+}
+
+msg = msg + ""

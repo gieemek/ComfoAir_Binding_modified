@@ -1,0 +1,54 @@
+var String msg = "OK"
+
+if (comfoairError.state instanceof StringType) {
+
+    if( comfoairError.state != "Ok" ) {
+    	msg = "Error: " + comfoairError.state
+    }
+}
+
+if( comfoairFilterErrorI.state instanceof DecimalType ) {
+	
+	if( comfoairFilterErrorI.state == 1 ) {
+		if( msg == "OK") {
+			msg = "Internal filter: NEED TO BE CHANGE"
+		} else {
+			msg = msg + ", Internal filter: NEED TO BE CHANGE"
+		}
+	}
+}
+
+if( comfoairFilterErrorE.state instanceof DecimalType ) {
+	
+	if( comfoairFilterErrorE.state == 1 ) {
+		if( msg == "OK" ) {
+			msg = "External filter: NEED TO BE CHANGE"
+		} else {
+			msg = msg + ", External filter: NEED TO BE CHANGE"
+		}
+	}
+}
+
+if( comfoairInletError.state instanceof StringType ) {
+	
+	if( comfoairInletError.state != "OK" ) {
+		if( msg == "OK" ) {
+			msg = "Inlet: " + comfoairInletError.state
+		} else {
+			msg = msg + ", Inlet: " + comfoairInletError.state
+		}
+	}
+}
+
+if( comfoairFrozenError.state instanceof StringType ) {
+	
+	if( comfoairFrozenError.state != "OK" ) {
+		if( msg == "OK" ) {
+			msg = "Exchanger: " + comfoairFrozenError.state
+		} else {
+			msg = msg + ", Exchanger: " + comfoairFrozenError.state
+		}
+	}
+}
+
+msg = msg + ""
