@@ -259,34 +259,49 @@ if `openhab` is your user.
 
 ## Examples
 
-items/comfoair_demo.items
+items/comfoair-demo.items
 
 ```
-Group Lueftung  "Lüftungsanlage"    <pie>
+// Comfo Air
+Group		ComfoAir										"ComfoAir"													<recu>			(devices)
 
-Number Lueftung_Auto_Mode   "Modus"                 <selfAutoMode> (Lueftung)
+// Temperatures chart
+Group		comfoairTemps_Chart																						<temperature>	(ComfoAir)
+Number	comfoairTemps_Chart_Period				"Period"
 
-String Lueftung_Aussentemperatur_Message "Aussen [%s]"          <temperature> (Lueftung)
-String Lueftung_Innentemperatur_Message "Innen [%s]"            <temperature> (Lueftung)
-String Lueftung_Ventilator_Message "Ventilator [%s]"            <selfAiring> (Lueftung)
-String Lueftung_Filterlaufzeit_Message  "Filterlaufzeit [%s]"       <selfRuntime> (Lueftung)
-String Lueftung_Status_Message  "Status [%s]"               <selfError> (Lueftung)
+// Control
+Number	comfoairControl							"Activate"													<computer>		(ComfoAir)								{comfoair="activate"}
+Number	comfoairFanLevel							"Ventilation level [%d]"								<chart>			(ComfoAir)								{comfoair="fan_level"}
+Number	comfoairFanLevel_Message				"Ventilation level [%d]"								<chart>			(ComfoAir)
+Number	comfoairFanMode_Message					"Supply / Exhaust [%d]"									<fan_in>			(ComfoAir)
+Number	comfoairTargetTemperature_Message	"Comfort temperature [%.1f Â°C]"						<temperature>	(ComfoAir)
+Number	comfoairErrorReset						"Error reset [%d]"										<service>		(ComfoAir)								{comfoair="error_reset"}
+Number	comfoairFilterReset						"Filter reset [%d]"										<service>		(ComfoAir)								{comfoair="filter_reset"}
+Number	comfoairReset								"Reset"														<reset>			(ComfoAir)
+Number	comfoairMode								"Manual - Auto [%d]"										<controlMode>	(ComfoAir)
+Switch	comfoairControl_Switch					"Activate"													<control>		(ComfoAir)
 
-Number Lueftung_Control     "Steuerung"                 <settings> (Lueftung) {comfoair="activate"}
-Number Lueftung_Fan_Level   "Stufe [%d]"                <selfAiring> (Lueftung) {comfoair="fan_level"}
-Number Lueftung_Komfortemperatur "Zieltemperatur [%.1f °C]"         <temperature> (Lueftung) {comfoair="target_temperatur"}
-Number Lueftung_Bypass      "Bypass [MAP(bypass_de.map):%s]"    <selfBypass> (Lueftung) {comfoair="bypass_mode"}
+// Messages
+String	comfoairError																													(ComfoAir)								{comfoair="error_message"}
+String	comfoairError_Message					"Messages [%s]"											<attention>		(ComfoAir)
+Number	comfoairFilterRuntime																										(ComfoAir)								{comfoair="filter_running"}
+String	comfoairFilterRuntime_Message			"Filter time [%s]"										<zegar>			(ComfoAir)
 
-Number Lueftung_Aussenlufttemperatur "Aussenzuluft [%.1f °C]"       <temperature> (Lueftung) {comfoair="outdoor_incomming_temperatur"}
-Number Lueftung_Fortlufttemperatur "Aussenabluft [%.1f °C]"         <temperature> (Lueftung) {comfoair="outdoor_outgoing_temperatur"}
-Number Lueftung_Zulufttemperatur "Raumzuluft [%.1f °C]"             <temperature> (Lueftung) {comfoair="indoor_incomming_temperatur"}
-Number Lueftung_Ablufttemperatur "Raumabluft [%.1f °C]"             <temperature> (Lueftung) {comfoair="indoor_outgoing_temperatur"}
-Number Lueftung_Zuluft      "Ventilator Zuluft [%d %%]"         <selfAiring> (Lueftung) {comfoair="incomming_fan"}
-Number Lueftung_Abluft      "Ventilator Abluft [%d %%]"         <selfAiring> (Lueftung) {comfoair="outgoing_fan"}
-Number Lueftung_Filterlaufzeit  "Filterlaufzeit [%d h]"         <selfClock> (Lueftung) {comfoair="filter_running"}
-Number Lueftung_FilterfehlerI   "Filter (intern) [MAP(filter_de.map):%s]"   <selfFilterintern> (Lueftung) {comfoair="filter_error_intern"}
-Number Lueftung_FilterfehlerE   "Filter (extern) [MAP(filter_de.map):%s]"   <selfFilterextern> (Lueftung) {comfoair="filter_error_extern"}
-String Lueftung_Fehlermeldung   "Fehlercode [%s]"               <selfError> (Lueftung) {comfoair="error_message"}
+// State
+Number	comfoairOutdoorIncomingTemperature	"Inlet air temperature [%.1f Â°C]"					<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="outdoor_incomming_temperatur"}
+Number	comfoairIndoorIncomingTemperature	"Supply air temperature [%.1f Â°C]"					<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="indoor_incomming_temperatur"}
+Number	comfoairIndoorOutgoingTemperature	"Return air temperature [%.1f Â°C]"					<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="indoor_outgoing_temperatur"}
+Number	comfoairOutdoorOutgoingTemperature	"Exhaust air temperature [%.1f Â°C]"					<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="outdoor_outgoing_temperatur"}
+Number	comfoairIncomingFan						"Supply capacity [%d %%]"								<fan_in>			(ComfoAir)								{comfoair="incomming_fan"}
+Number	comfoairOutgoingFan						"Exhaust capasity [%d %%]"								<fan_out>		(ComfoAir)								{comfoair="outgoing_fan"}
+Number	comfoairEfficiency						"Efficiency [%.1f %%]"									<efficiency>	(ComfoAir)
+Number	comfoairBypassMode						"Bypass [MAP(comfoair_bypass.map):%s]"				<climate>		(ComfoAir)								{comfoair="bypass_mode"}
+Number	comfoairEWTMode 							"EWT [MAP(comfoair_on-off.map):%s]"					<climate>		(ComfoAir)								{comfoair="ewt_mode"}
+Number	comfoairChimneyMode						"Fire programme [MAP(comfoair_on-off.map):%s]"	<climate>		(ComfoAir)								{comfoair="chimney_mode"}
+Number	comfoairPreheaterMode					"Preheater [MAP(comfoair_on-off.map):%s]"			<climate>		(ComfoAir)								{comfoair="preheater_mode"}
+Number	comfoairCookerHoodMode					"Extractor hood [MAP(comfoair_on-off.map):%s]"	<climate>		(ComfoAir)								{comfoair="cookerhood_mode"}
+Number	comfoairEnthalpyMode						"Enthalpy [MAP(comfoair_on-off.map):%s]"			<climate>		(ComfoAir)								{comfoair="enthalpy_mode"}
+Number	comfoairFreezeMode						"Freeze [MAP(comfoair_freeze.map):%s]"				<climate>		(ComfoAir)								{comfoair="freeze_mode"}
 ```
 
 transform/comfoair_bypass.map
@@ -323,17 +338,15 @@ Strategies {
 	// for rrd charts, we need a cron strategy
 	everyMinute : "0 * * * * ?"
 }
+
 Items {
-	comfoairOutdoorIncomingTemperature : strategy = everyChange, restoreOnStartup
-	comfoairIndoorIncomingTemperature : strategy = everyChange, restoreOnStartup
-	comfoairIndoorOutgoingTemperature : strategy = everyChange, restoreOnStartup
-	comfoairOutdoorOutgoingTemperature : strategy = everyChange, restoreOnStartup
-	comfoairEfficiency : strategy = everyChange, restoreOnStartup
-	comfoairFanLevel : strategy = everyChange, restoreOnStartup
+	comfoairTemps_Chart : strategy = everyChange, restoreOnStartup
+	comfoairEfficiency : strategy = everyMinute, restoreOnStartup
+	comfoairFanLevel : strategy = everyMinute, restoreOnStartup
 }
 ```
 
-sitemaps/comfoair.sitemap (fragment)
+sitemaps/comfoair-demo.sitemap
 
 ```
 sitemap ComfoAir-demo label="ComfoAir" {
@@ -378,7 +391,7 @@ sitemap ComfoAir-demo label="ComfoAir" {
 }
 ```
 
-rules/airflow.rules
+rules/comfoair-demo.rules
 
 ```Xtend
 import java.lang.Math
