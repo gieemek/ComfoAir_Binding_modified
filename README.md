@@ -343,67 +343,45 @@ persistence/db4o.persist
 sitemaps/comfoair.sitemap (fragment)
 
 ```
-Text label="Informationen" icon="house" {
-    Text item=Lueftung_Fan_Level label="Lüftung [MAP(level_de.map):%d]" icon="selfAiring" {
-        Frame {
-            Switch item=Lueftung_Auto_Mode label="Modus" mappings=[1="Auto", 0="Manuell"]
-            Switch item=Lueftung_Fan_Level label="Stufe" mappings=[1="A", 2="1", 3="2", 4="3"]
-        }
-        Frame {
-            Setpoint item=Lueftung_Komfortemperatur step=0.5 minValue=15 maxValue=25
-            Text item=Lueftung_Aussentemperatur_Message
-            Text item=Lueftung_Innentemperatur_Message
-            Text item=Lueftung_Ventilator_Message
-            Text item=Lueftung_Bypass
-        }
-        Frame {
-            Text item=Lueftung_Filterlaufzeit_Message
-            Text item=Lueftung_Status_Message
-            Switch item=Lueftung_Control mappings=[1="App", 0="CCEase"]
-        }
-    }
-    Text item=Gas_Aktueller_Tagesverbrauch label="Gas [%.2f m³]" {
-        Frame {
-            Text item=Gas_Aktueller_Tagesverbrauch
-            Text item=Gas_Aktueller_Verbrauch
-            Text item=Gas_Min_Verbrauch
-            Text item=Gas_Max_Verbrauch
-        }
-        Frame {
-            Chart item=Gas_Aktueller_Verbrauch period=D refresh=10000
-            Chart item=Gas_Letzter_Tagesverbrauch period=M refresh=86400
-            Chart item=Gas_Letzter_Tagesverbrauch period=Y refresh=86400
-        }
-    }
-    Text item=Strom_Aktueller_Tagesverbrauch label="Strom [%.2f KWh]"{
-        Frame {
-            Text item=Strom_Aktueller_Tagesverbrauch
-            Text item=Strom_Aktueller_Verbrauch
-            Text item=Strom_Min_Verbrauch
-            Text item=Strom_Max_Verbrauch
-            Text item=Strom_Zaehler
-        }
-        Frame {
-            Chart item=Strom_Aktueller_Verbrauch period=D refresh=10000
-            Chart item=Strom_Letzter_Tagesverbrauch period=M refresh=86400
-            Chart item=Strom_Letzter_Tagesverbrauch period=Y refresh=86400
-        }
-    }
-    Text item=Wetter_Aussentemperatur label="Temperatur [%.1f °C]"{
-        Frame {
-            Text item=Wetter_Innentemperatur
-            Text item=Wetter_Aussentemperatur
-            Text item=Wetter_Temp_Max
-            Text item=Wetter_Temp_Min
-        }
-        Frame {
-            Chart item=Wetter_Diagramm period=D refresh=10000
-            Chart item=Wetter_Aussentemperatur period=W refresh=10000
-            Chart item=Wetter_Aussentemperatur period=M refresh=86400
-            Chart item=Wetter_Aussentemperatur period=Y refresh=86400
-        }
-    }
-    Text item=Datum
+sitemap ComfoAir-demo label="ComfoAir" {
+ Frame label="Main" {
+		Text item=comfoairError_Message labelcolor=[!="OK"="red"] valuecolor=[!="OK"="red"]
+		Switch item=comfoairControl mappings=[0="CCEasy", 1="Komputer"]
+		Switch item=comfoairErrorReset mappings=[1="Reset"]
+		Switch item=comfoairFilterReset mappings=[1="Reset"]
+	}
+	Frame label="Control" {
+		Switch item=comfoairMode mappings=[0="Manual", 1="Auto"]
+		Switch item=comfoairFanMode_Message mappings=[0="Sup + Exh", 1="Supply", 2="Exhaust"]
+		Switch item=comfoairFanLevel_Message mappings=[2="Level 1", 3="Level 2", 4="Level 3"]
+		Setpoint item=comfoairTargetTemperature_Message step=0.5 minValue=15 maxValue=28 valuecolor=["black"]
+	}
+	Frame label="State" {
+		Text item=comfoairOutdoorIncomingTemperature valuecolor=["black"]
+		Text item=comfoairOutdoorOutgoingTemperature valuecolor=["black"]
+		Text item=comfoairIndoorIncomingTemperature valuecolor=["black"]
+		Text item=comfoairIndoorOutgoingTemperature valuecolor=["black"]
+	}
+	Frame {
+		Text item=comfoairIncomingFan valuecolor=["black"]
+		Text item=comfoairBypassMode valuecolor=["black"]
+		Text item=comfoairOutgoingFan valuecolor=["black"]
+		Text item=comfoairEWTMode valuecolor=[0="silver", 1="black"]
+		Text item=comfoairEfficiency valuecolor=["black"]
+		Text item=comfoairFreezeMode valuecolor=[0="black", 1="red"]
+		Text item=comfoairFilterRuntime_Message valuecolor=["black"]
+		Text item=comfoairChimneyMode valuecolor=[0="silver", 1="black"]
+	}
+	Frame label="Results" {
+		Text label="Charts" icon="graph" {
+			Frame {
+				Webview url="/static/charts/comfoairEfficiency+Temp_Chart.html" height=16
+			}
+			Frame {
+				Webview url="/static/charts/comfoairFan_Chart.html" height=16
+			}
+		}
+	}
 }
 ```
 
