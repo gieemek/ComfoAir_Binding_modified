@@ -1,0 +1,10 @@
+Strategies {
+	// for rrd charts, we need a cron strategy
+	everyMinute : "0 * * * * ?"
+}
+
+Items {
+	comfoairTemps_Chart : strategy = everyChange, restoreOnStartup
+	comfoairEfficiency : strategy = everyMinute, restoreOnStartup
+	comfoairFanLevel : strategy = everyMinute, restoreOnStartup
+}
