@@ -259,28 +259,7 @@ if `openhab` is your user.
 
 ## Examples
 
-### Basic Examples
-
-```
-Number airflowControl "Activated" {comfoair="activate"}
-Number airflowFanLevel "Level [%d]" {comfoair="fan_level"}
-Number airflowTargetTemperature "Target temperature [%.1f °C]" {comfoair="target_temperature"}
-
-Number airflowOutdoorIncomingTemperature "Outdoor incoming [%.1f °C]" {comfoair="outdoor_incomming_temperatur"}
-Number airflowOutdoorOutgoingTemperature "Outdoor outgoing [%.1f °C]" {comfoair="outdoor_outgoing_temperatur"}
-Number airflowIndoorIncommingTemperature "Indoor incomming [%.1f °C]" {comfoair="indoor_incomming_temperatur"}
-Number airflowIndoorOutgoingTemperature "Indoor outgoing [%.1f °C]" {comfoair="indoor_outgoing_temperatur"}
-Number airflowIncommingFan      "Incomming fan [%d %%]" {comfoair="incomming_fan"}
-Number airflowOutgoingFan       "Outgoing fan [%d %%]" {comfoair="outgoing_fan"}
-Number airflowFilterRuntime         "Filter runtime [%d h]" {comfoair="filter_running"}
-Number airflowFilterErrorI          "Filter (intern) [%s]" {comfoair="filter_error_intern"}
-Number airflowFilterErrorE          "Filter (extern) [%s]" {comfoair="filter_error_extern"}
-String airflowError                 "Errorcode [%s]" {comfoair="error_message"}
-```
-
-### Extended Examples
-
-items/comfoair.items
+items/comfoair_demo.items
 
 ```
 Group Lueftung  "Lüftungsanlage"    <pie>
@@ -310,41 +289,46 @@ Number Lueftung_FilterfehlerE   "Filter (extern) [MAP(filter_de.map):%s]"   <sel
 String Lueftung_Fehlermeldung   "Fehlercode [%s]"               <selfError> (Lueftung) {comfoair="error_message"}
 ```
 
-transform/bypass_de.map
+transform/comfoair_bypass.map
 
 ```
-1=Offen
-0=Geschlossen
-undefined=undefiniert
--=undefiniert
+1=Opened
+0=Closed
+undefined=undefined
+-=undefined
 ```
 
-transform/filter_de.map
+transform/comfoair_on-off.map
 
 ```
-1=Wechseln
-0=Ok
-undefined=undefiniert
--=undefiniert
+1=On
+0=Off
+undefined=undefined
+-=undefined
 ```
 
-persistence/db4o.persist
+persistence/rrd4j.persist
 
 ```
- Lueftung_Auto_Mode : strategy = everyChange, restoreOnStartup
- Lueftung_Aussentemperatur_Message : strategy = everyChange, restoreOnStartup
- Lueftung_Innentemperatur_Message : strategy = everyChange, restoreOnStartup
- Lueftung_Ventilator_Message : strategy = everyChange, restoreOnStartup
- Lueftung_Filterlaufzeit_Message : strategy = everyChange, restoreOnStartup
- Lueftung_Status_Message : strategy = everyChange, restoreOnStartup
- Lueftung_Fan_Level : strategy = everyChange, restoreOnStartup
+Strategies {
+	// for rrd charts, we need a cron strategy
+	everyMinute : "0 * * * * ?"
+}
+Items {
+	comfoairOutdoorIncomingTemperature : strategy = everyChange, restoreOnStartup
+	comfoairIndoorIncomingTemperature : strategy = everyChange, restoreOnStartup
+	comfoairIndoorOutgoingTemperature : strategy = everyChange, restoreOnStartup
+	comfoairOutdoorOutgoingTemperature : strategy = everyChange, restoreOnStartup
+	comfoairEfficiency : strategy = everyChange, restoreOnStartup
+	comfoairFanLevel : strategy = everyChange, restoreOnStartup
+}
 ```
 
 sitemaps/comfoair.sitemap (fragment)
 
 ```
 sitemap ComfoAir-demo label="ComfoAir" {
- Frame label="Main" {
+	Frame label="Main" {
 		Text item=comfoairError_Message labelcolor=[!="OK"="red"] valuecolor=[!="OK"="red"]
 		Switch item=comfoairControl mappings=[0="CCEasy", 1="Komputer"]
 		Switch item=comfoairErrorReset mappings=[1="Reset"]
