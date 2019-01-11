@@ -380,12 +380,10 @@ sitemap ComfoAir-demo label="ComfoAir" {
 	}
 	Frame label="Results" {
 		Text label="Charts" icon="graph" {
-			Frame {
-				Webview url="/static/charts/comfoairEfficiency+Temp_Chart.html" height=16
-			}
-			Frame {
-				Webview url="/static/charts/comfoairFan_Chart.html" height=16
-			}
+			Chart item=comfoairTemps_Chart period=D refresh=10000
+			Chart item=comfoairTemps_Chart period=W refresh=60000
+			Chart item=comfoairTemps_Chart period=M refresh=60000
+			Chart item=comfoairTemps_Chart period=Y refresh=600000
 		}
 	}
 }
