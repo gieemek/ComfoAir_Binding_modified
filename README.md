@@ -294,8 +294,8 @@ transform/comfoair_bypass.map
 ```
 1=Opened
 0=Closed
-undefined=undefined
--=undefined
+undefined=unknown
+-=unknown
 ```
 
 transform/comfoair_on-off.map
@@ -303,8 +303,17 @@ transform/comfoair_on-off.map
 ```
 1=On
 0=Off
-undefined=undefined
--=undefined
+undefined=unknown
+-=unknown
+```
+
+transform/comfoair_freeze.map
+
+```
+1=Frozen
+0=OK
+undefined=unknown
+-=unknown
 ```
 
 persistence/rrd4j.persist
