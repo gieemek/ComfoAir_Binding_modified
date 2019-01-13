@@ -436,7 +436,6 @@ then
 end
 
 
-
 rule "changeVentilationLevelSwitch"
 when 
     Item Delayed_Start changed to ON
@@ -447,7 +446,6 @@ then
 		comfoairFanLevel_Message.postUpdate( comfoairFanLevel.state )
 	}
 end
-
 
 
 rule "changeComfortTemperature"
