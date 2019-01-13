@@ -276,7 +276,7 @@ Switch	Delayed_Start
 Switch	EnergySummerTime
 
 // External temperature, this parameter is read by other sensor or by weather station
-Number	weatherN_Temperature			"External temperature [%.1f °C]"						<temperature>
+Number	weatherN_Temperature			"External temperature [%.1f °C]"		<temperature>
 
 // Control
 Number	comfoairControl				"Activate"					<computer>	(ComfoAir)			{comfoair="activate"}
@@ -315,7 +315,7 @@ Number	comfoairIndoorOutgoingTemperature	"Return air temperature [%.1f °C]"		<t
 Number	comfoairOutdoorOutgoingTemperature	"Exhaust air temperature [%.1f °C]"		<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="outdoor_outgoing_temperatur"}
 Number	comfoairIncomingFan			"Supply capacity [%d %%]"			<fan_in>	(ComfoAir)			{comfoair="incomming_fan"}
 Number	comfoairOutgoingFan			"Exhaust capasity [%d %%]"			<fan_out>	(ComfoAir)			{comfoair="outgoing_fan"}
-Number	comfoairEfficiency			"Efficiency [%.1f %%]"									<efficiency>	(ComfoAir)
+Number	comfoairEfficiency			"Efficiency [%.1f %%]"				<efficiency>	(ComfoAir)
 Number	comfoairBypassMode			"Bypass [MAP(comfoair_bypass.map):%s]"		<climate>	(ComfoAir)			{comfoair="bypass_mode"}
 Number	comfoairEWTMode 			"EWT [MAP(comfoair_on-off.map):%s]"		<climate>	(ComfoAir)			{comfoair="ewt_mode"}
 Number	comfoairChimneyMode			"Fire programme [MAP(comfoair_on-off.map):%s]"	<climate>	(ComfoAir)			{comfoair="chimney_mode"}
@@ -339,6 +339,15 @@ transform/comfoair_on-off.map
 ```
 1=On
 0=Off
+undefined=unknown
+-=unknown
+```
+
+transform/comfoair_is-not.map
+
+```
+1=Install
+0=Not install
 undefined=unknown
 -=unknown
 ```
@@ -367,10 +376,10 @@ Items {
 }
 ```
 
-sitemaps/comfoair-demo.sitemap
+sitemaps/comfoair.sitemap
 
 ```
-sitemap ComfoAir-demo label="ComfoAir" {
+sitemap comfoair label="ComfoAir" {
 	Frame label="Main" {
 		Text item=comfoairError_Message labelcolor=[!="OK"="red"] valuecolor=[!="OK"="red"]
 		Switch item=comfoairControl mappings=[0="CCEasy", 1="Komputer"]
@@ -400,250 +409,610 @@ sitemap ComfoAir-demo label="ComfoAir" {
 		Text item=comfoairChimneyMode valuecolor=[0="silver", 1="black"]
 	}
 	Frame label="Results" {
-		Text label="Charts" icon="graph" {
-			Chart item=comfoairTemps_Chart period=D refresh=10000
-			Chart item=comfoairTemps_Chart period=W refresh=60000
-			Chart item=comfoairTemps_Chart period=M refresh=60000
-			Chart item=comfoairTemps_Chart period=Y refresh=600000
+		Text label="Charts" icon="chart" {
+			Switch item=comfoairTemps_Chart_Period mappings=[0="Day", 1="Week", 2="Month", 3="Year"]
+			Chart item=comfoairTemps_Chart period=D refresh=10000 visibility=[comfoairTemps_Chart_Period==0]
+			Chart item=comfoairTemps_Chart period=W refresh=60000 visibility=[comfoairTemps_Chart_Period==1, comfoairTemps_Chart_Period=="Uninitialized"]
+			Chart item=comfoairTemps_Chart period=M refresh=60000 visibility=[comfoairTemps_Chart_Period==2]
+			Chart item=comfoairTemps_Chart period=Y refresh=600000 visibility=[comfoairTemps_Chart_Period==3]
 		}
 	}
 }
 ```
 
-rules/comfoair-demo.rules
+rules/comfoair.rules
 
 ```Xtend
 import java.lang.Math
+import java.util.Date
+import java.util.List
+import java.util.ArrayList
 
-var boolean autoChangeInProgress = false
+// variable for auto_mode state
+var Boolean isAutoMode = false
 
-rule "Filterlaufzeit"
+// based capacity for absent level
+// absent level is used for supply/exhaust mode
+var Number comfoairFanIn0BaseValue = 15
+var Number comfoairFanOut0BaseValue = 15
+var Number comfoairFanLevelLastValue
+var Number comfoairFanIn0LastValue
+var Number comfoairFanOut0LastValue
+
+
+// System start can take some time
+rule "delayForSystemStart"
 when
-    System started
-    or
-    Item Lueftung_Filterlaufzeit changed
+	System started
 then
-    if( Lueftung_Filterlaufzeit.state instanceof DecimalType ){
+	Delayed_Start.postUpdate( OFF )
 
-        var Number laufzeit = Lueftung_Filterlaufzeit.state as DecimalType
-
-        var Number weeks = Math::floor( (laufzeit/168).doubleValue )
-        var Number days = Math::floor( ((laufzeit-(weeks*168))/24).doubleValue)
-
-        var String msg = ""
-
-        if( weeks > 0 ){
-
-            if( weeks == 1 ) msg = weeks.intValue + " Woche"
-            else msg = weeks.intValue + " Wochen"
-        }
-
-        if( days > 0 ){
-
-            if( msg.length > 0 ) msg = msg + ", "
-
-            if( days == 1 ) msg = msg + days.intValue + " Tag"
-            else msg = msg + days.intValue + " Tage"
-        }
-
-        postUpdate(Lueftung_Filterlaufzeit_Message,msg)
-    }
+	createTimer( now.plusSeconds( 120 )) [| Delayed_Start.sendCommand( ON )]
 end
 
-rule "Status Meldung"
+
+rule "setAutoModeForStart"
 when
-    System started
-    or
-    Item Lueftung_Fehlermeldung changed
-    or
-    Item Lueftung_FilterfehlerI changed
-    or
-    Item Lueftung_FilterfehlerE changed
+	Item Delayed_Start changed to ON
 then
-    var String msg = ""
-
-    if( (Lueftung_FilterfehlerI.state instanceof DecimalType) && (Lueftung_FilterfehlerE.state instanceof DecimalType) && (Lueftung_Fehlermeldung.state instanceof StringType) ){
-
-        if( (Lueftung_FilterfehlerI.state as DecimalType) == 1 || (Lueftung_FilterfehlerE.state as DecimalType) == 1 ){
-            if( msg.length > 0 ) msg = msg + ", "
-            msg = msg + "Filter: "
-            if( (Lueftung_FilterfehlerI.state as DecimalType) == 1 ) msg = msg + "I"
-            if( (Lueftung_FilterfehlerI.state as DecimalType) == 1 && (Lueftung_FilterfehlerE.state as DecimalType) == 1) msg = msg + " & "
-            if( (Lueftung_FilterfehlerE.state as DecimalType) == 1 ) msg = msg + "E"
-        }
-        if( (Lueftung_Fehlermeldung.state as StringType) != "Ok" ){
-            if( msg.length > 0 ) msg = msg + ", "
-            msg = msg + "Error: " + (Lueftung_Fehlermeldung.state as StringType)
-        }
-    }
-
-    if( msg.length == 0 ){
-
-        msg = "Alles in Ordnung"
-    }
-
-    postUpdate(Lueftung_Status_Message,msg)
+	if( comfoairControl.state == 1 ) {
+		comfoairMode.postUpdate( 1 )
+		isAutoMode = true
+		comfoairFanMode.postUpdate( 0 )
+	}
 end
 
-rule "Aussentemperatur Meldung"
-when
-    System started
-    or
-    Item Lueftung_Aussenlufttemperatur changed
-    or
-    Item Lueftung_Fortlufttemperatur changed
-then
-    if( (Lueftung_Aussenlufttemperatur.state instanceof DecimalType) && (Lueftung_Fortlufttemperatur.state instanceof DecimalType) ){
 
-        postUpdate(Lueftung_Aussentemperatur_Message,"→ " + Lueftung_Aussenlufttemperatur.state.format("%.1f") +"°C, ← " + Lueftung_Fortlufttemperatur.state.format("%.1f") + "°C")
-    }
+rule "setControlToCCEaseWhenSystemClose"
+when
+	System shuts down
+then
+	comfoairControl.sendCommand( 0 )
 end
 
-rule "Innentemperatur Meldung"
-when
-    System started
-    or
-    Item Lueftung_Zulufttemperatur changed
-    or
-    Item Lueftung_Ablufttemperatur changed
-then
-    if( (Lueftung_Zulufttemperatur.state instanceof DecimalType) && (Lueftung_Ablufttemperatur.state instanceof DecimalType) ){
 
-        postUpdate(Lueftung_Innentemperatur_Message,"→ " + Lueftung_Zulufttemperatur.state.format("%.1f") +"°C, ← " + Lueftung_Ablufttemperatur.state.format("%.1f") + "°C")
-    }
+rule "messageWhenFrozen"
+when
+	Item Delayed_Start changed to ON
+	or
+	Item comfoairControl changed to 1
+	or
+	Item comfoairIncomingFan changed
+	or
+	Item comfoairOutgoingFan changed
+	or
+	Item weatherN_Temperature changed
+then
+	if( Delayed_Start.state == ON && comfoairControl.state == 1 ) {
+		var String msg = ""
+
+		if( comfoairIncomingFan.state instanceof DecimalType && comfoairOutgoingFan.state instanceof DecimalType && weatherN_Temperature.state instanceof DecimalType ) {
+			
+			if( weatherN_Temperature.state < 0 && ( comfoairIncomingFan.state == 0 || comfoairOutgoingFan.state == 0 ) ) {
+				msg = "FROZEN"
+			} else msg = "OK"
+			
+		} else msg = "communication failed"
+		
+		comfoairFrozenError.postUpdate( msg )
+	}
 end
 
-rule "Ventilator Meldung"
-when
-    System started
-    or
-    Item Lueftung_Zuluft changed
-    or
-    Item Lueftung_Abluft changed
-then
-    if( (Lueftung_Zuluft.state instanceof DecimalType) && (Lueftung_Abluft.state instanceof DecimalType) ){
 
-        postUpdate(Lueftung_Ventilator_Message,"→ " + (Lueftung_Zuluft.state as DecimalType) +"%, ← " + (Lueftung_Abluft.state as DecimalType) + "%")
-    }
+rule "messageWhenInletPlugged"
+when
+	Item Delayed_Start changed to ON
+	or
+	Item comfoairControl changed to 1
+	or
+	Item comfoairOutdoorIncomingTemperature changed
+	or
+	Item weatherN_Temperature changed
+	or
+	Item comfoairFrozenError changed
+then
+	if( Delayed_Start.state == ON && comfoairControl.state == 1 ) {
+		var String msg = ""
+
+		if( comfoairOutdoorIncomingTemperature.state instanceof DecimalType && weatherN_Temperature.state instanceof DecimalType && comfoairFrozenError.state instanceof StringType ) {
+			
+			if( weatherN_Temperature.state as DecimalType + 10 < comfoairOutdoorIncomingTemperature.state as DecimalType && comfoairFrozenError.state == "OK" ) {
+				msg = "PLUGGED"
+			} else msg = "OK"
+			
+		} else msg = "communication failed"
+		
+		comfoairInletError.postUpdate( msg )
+	}
 end
 
-rule "Filter Fehler"
-when
-    Item Lueftung_Fehlermeldung changed
-then
-    if( (Lueftung_Fehlermeldung.state as StringType) != "Ok" ){
 
-        send("test@gmail.com", "Lüftung hat einen Fehler gemeldet")
-    }
+rule "showMessage"
+when
+	Item Delayed_Start changed to ON
+	or
+	Item comfoairControl changed to 1
+	or
+	Item comfoairError changed
+	or
+	Item comfoairFilterErrorI changed
+	or
+	Item comfoairFilterErrorE changed
+	or
+	Item comfoairInletError changed
+	or
+	Item comfoairFreezeError changed
+then
+	if( Delayed_Start.state == ON && comfoairControl.state == 1 ) {
+		var String msg = "" + callScript( "comfoair_errorMsg" )
+		var String msgToSend = "" + callScript( "comfoair_errorMsgToSend" )
+		
+		comfoairError_Message.postUpdate( msg )
+		
+		if( comfoairError.state != "Ok" || comfoairFilterErrorI.state == 1 || comfoairFilterErrorE.state == 1 || comfoairInletError.state != "OK" || comfoairFrozenError.state != "OK" ) {
+			sendMail( "xyz@gmail.com", "ComfoAir message", msgToSend )
+		}
+	}
 end
 
-rule "Filter wechseln"
+
+rule "showFilterTime"
 when
-    Item Lueftung_FilterfehlerI changed
+	Item comfoairFilterRuntime changed
+	or
+	Item comfoairFilterPeriod changed
+	or
+	Item Delayed_Start changed to ON
+	or
+	Item comfoairControl changed to 1
+then
+	if( comfoairFilterRuntime.state instanceof DecimalType && comfoairFilterPeriod.state instanceof DecimalType ) {
+		var Number filterPeriodWeeks = comfoairFilterPeriod.state
+		var Number filterPeriodHours = filterPeriodWeeks * 7 * 24
+		
+		if( comfoairFilterRuntime.state instanceof DecimalType ){
+			var Number passedHours = comfoairFilterRuntime.state as DecimalType
+			var Boolean isTimeExceeded
+
+			if( filterPeriodHours - passedHours < 0) {
+				isTimeExceeded = true
+			} else isTimeExceeded = false
+
+			var Number passedWeeks = Math::floor( ( passedHours / 168 ).doubleValue )
+			var Number passedDays = Math::floor( ( ( passedHours - (passedWeeks * 168 ) ) / 24).doubleValue )
+			var Number remainedHours = Math::abs( ( filterPeriodHours - passedHours ).intValue )
+			var Number remainedWeeks = Math::floor( ( remainedHours / 168 ).doubleValue )
+			var Number remainedDays = Math::floor( ( ( remainedHours - ( remainedWeeks * 168 ) ) / 24).doubleValue )
+		
+			var String msg = "Passed: "
+		
+			if( passedWeeks > 0 ) {
+
+				if( passedWeeks == 1 ) msg = msg + "1 week"
+				else msg = msg + passedWeeks.intValue + " weeks"
+				
+				if( passedDays > 0) msg = msg + " "
+				else msg = msg + ","
+			}
+			if( passedDays > 0 ) {
+				if( passedDays == 1 ) msg = msg + "1 day,"
+				else msg = msg + passedDays.intValue + " days,"
+			}
+			if( passedWeeks == 0 && passedDays == 0 ) msg = msg + "0 days, "
+			
+			if( isTimeExceeded ) msg = msg + " Exceeded: "
+			else msg = msg + " Remained: "
+			
+			if( remainedWeeks != 0 ) {
+
+				if( remainedWeeks == 1 ) msg = msg + "1 week"
+				else msg = msg + remainedWeeks.intValue + " weeks"
+
+				if( remainedDays > 0 ) msg = msg + " "
+			}
+			if( remainedDays != 0 ) {
+				if( remainedDays == 1 ) msg = msg + "1 day"
+				else msg = msg + remainedDays.intValue + " days"
+			}
+			
+			if( remainedWeeks == 0 && remainedDays == 0 ) msg = msg + "0 days"
+			
+			comfoairFilterRuntime_Message.postUpdate( msg )
+			
+		} else {
+			comfoairFilterRuntime_Message.postUpdate( "communication failed" )
+		}
+	}
+end
+
+
+rule "errorReset"
+when
+    Item comfoairReset changed
+then
+	var String error
+	
+	if( comfoairControl.state == 1 ) {
+		
+		if( comfoairReset.state == "0" ) {
+			comfoairFilterReset.sendCommand( 0 )
+			logInfo( "ComfoAir", "Filter was reset !" )
+			
+		} else if( comfoairReset.state == "1" ) {
+			comfoairErrorReset.sendCommand( 0 )
+			logInfo( "ComfoAir", "Error was reset !" )
+		}
+		
+		createTimer(now.plusSeconds( 5 ),  [ |
+			error = "" + callScript( "comfoair_errorMsg" )
+			comfoairError_Message.postUpdate( error )
+		])
+	    
+   } else {
+    	if( comfoairReset.state == "0" || comfoairReset.state == "1" ) {
+			comfoairError_Message.postUpdate( "PC control is not active" )
+			
+			createTimer(now.plusSeconds( 10 ),  [ |
+            error = "" + callScript( "comfoair_errorMsg" )
+            comfoairError_Message.postUpdate( error )
+			])
+		}
+   }
+end
+
+
+rule "calculateEfficiency"
+when
+	Item Delayed_Start changed to ON
+	or
+	Item comfoairOutdoorIncomingTemperature changed
+	or
+	Item comfoairIndoorOutgoingTemperature changed
+	or
+	Item comfoairIndoorIncomingTemperature changed
+	or
+	Item comfoairControl changed to 1
+then
+    var Number efficiency
+    
+    if( comfoairOutdoorIncomingTemperature.state instanceof DecimalType && comfoairIndoorOutgoingTemperature.state instanceof DecimalType && comfoairIndoorIncomingTemperature.state instanceof DecimalType && comfoairBypassMode.state == 0 ) {
+	    var Number tempOutIn = comfoairOutdoorIncomingTemperature.state as DecimalType
+	    var Number tempInOut = comfoairIndoorOutgoingTemperature.state as DecimalType
+	    var Number tempInIn = comfoairIndoorIncomingTemperature.state as DecimalType
+	    
+	    if( tempInOut != tempOutIn ) {
+		    efficiency = ( tempInIn - tempOutIn ) / ( tempInOut - tempOutIn ) * 100
+		    efficiency = Math::round( efficiency.doubleValue );
+		} else efficiency = null
+    } else efficiency = null
+    
+    comfoairEfficiency.postUpdate( efficiency )
+end
+
+
+rule "changeSupply-Exhaust"
+when
+	Item comfoairFanMode_Message changed
+then
+	var Number newFanMode = comfoairFanMode_Message.state as DecimalType
+	
+	if( comfoairControl.state == 1 ) {
+
+		if( comfoairChimney.state == 0 ) {
+
+			if( comfoairFanMode_Message.state != comfoairFanMode.state ) {
+				comfoairFanMode.sendCommand( newFanMode )
+			}
+
+		} else if( comfoairFanMode_Message.state != comfoairFanMode.state ) {
+			comfoairError_Message.postUpdate( "Fire programme is on" )
+
+			createTimer(now.plusMillis( 200 ),  [ |
+				comfoairFanMode_Message.postUpdate( comfoairFanMode.state )
+			])
+			
+			createTimer(now.plusSeconds( 10 ),  [ |
+				var String error = "" + callScript( "comfoair_errorMsg" )
+				comfoairError_Message.postUpdate( error )
+			])
+		}
+	} else if( comfoairFanMode_Message.state != comfoairFanMode.state ) {
+		comfoairError_Message.postUpdate( "PC control is not active" )
+		
+		createTimer(now.plusMillis( 200 ),  [ |
+			comfoairFanMode_Message.postUpdate( comfoairFanMode.state )
+		])
+		
+		createTimer(now.plusSeconds( 10 ),  [ |
+			var String error = "" + callScript( "comfoair_errorMsg" )
+			comfoairError_Message.postUpdate( error )
+		])
+	}
+end
+
+
+rule "changeSupply-ExhaustSwitch"
+when 
+    Item Delayed_Start changed to ON
     or
-    Item Lueftung_FilterfehlerE changed
+    Item comfoairFanMode changed
 then
-    if( (Lueftung_FilterfehlerI.state as DecimalType) == 1 || (Lueftung_FilterfehlerE.state as DecimalType) == 1 ){
-
-        send("test@gmail.com", "Lüftungsfilter muss gewechselt werden")
-        }
+	if( comfoairFanMode.state instanceof DecimalType ) {
+		comfoairFanMode_Message.postUpdate( comfoairFanMode.state )
+	}
 end
 
-rule "Manueller Eingriff"
+
+rule "changeSupply-ExhaustMode"
 when
-    Item Lueftung_Fan_Level changed
+    Item comfoairFanMode changed
 then
+	if( comfoairControl.state instanceof Number && comfoairChimney.state instanceof Number ) {
 
-    if( autoChangeInProgress ){
+		if( comfoairFanMode.state instanceof Number ) {
 
-        autoChangeInProgress = false
-    }
-    else{
+			if( comfoairFanLevel.state > 1 ) {
+				comfoairFanLevelLastValue = comfoairFanLevel.state
 
-        postUpdate(Lueftung_Auto_Mode,0)
-    }
+				Thread::sleep( 100 )
+				comfoairFanIn0LastValue = comfoairIncomingFan.state
+				comfoairFanOut0LastValue = comfoairOutgoingFan.state
+			}
+
+			// Supply + Exhaust
+			if( comfoairFanMode.state == 0 ) {
+
+				if( comfoairIncomingFan.state == 0 || comfoairOutgoingFan.state == 0 ) {
+					comfoairFanIn0.sendCommand( comfoairFanIn0BaseValue )
+
+					createTimer(now.plusSeconds( 1 ),  [ |
+						comfoairFanOut0.sendCommand( comfoairFanOut0BaseValue )
+					])
+
+					if( comfoairFanLevel.state < 2 ) {
+						comfoairFanLevel.sendCommand( comfoairFanLevelLastValue.toString )
+					}
+				}
+			} else {
+				comfoairFanLevel.sendCommand( "1" )
+
+				// Supply
+				if( comfoairFanMode.state == 1 ) {
+
+					if( comfoairIncomingFan.state == 0 ) {
+						comfoairFanIn0.sendCommand( comfoairFanIn0LastValue )
+					} else {
+						comfoairFanIn0.sendCommand( comfoairIncomingFan.state )
+					}
+
+					createTimer( now.plusSeconds( 1 ),  [ | comfoairFanOut0.sendCommand( 0 ) ])
+
+					comfoairMode.postUpdate( 0 )
+					isAutoMode = false
+				}
+
+				// Exhaust
+				if( comfoairFanMode.state == 2 ) {
+
+					comfoairFanIn0.sendCommand( 0 )
+
+					createTimer(now.plusSeconds( 1 ),  [ |
+						if( comfoairOutgoingFan.state == 0 ) {
+							comfoairFanOut0.sendCommand( comfoairFanOut0LastValue )
+						} else {
+							comfoairFanOut0.sendCommand( comfoairOutgoingFan.state )
+						}
+					])
+
+					comfoairMode.postUpdate( 0 )
+					isAutoMode = false
+				}
+			}
+		}
+	}
 end
 
-rule "Lüfterstufe"
+
+rule "changeAuto-Manual"
 when
-    Item Lueftung_Auto_Mode changed
+    Item comfoairMode changed
+then
+    if( comfoairControl.state == 0 ) {
+		comfoairError_Message.postUpdate( "PC control is not active" )
+		
+		createTimer(now.plusSeconds( 10 ),  [ |
+      	var String error = "" + callScript( "comfoair_errorMsg" )
+      	comfoairError_Message.postUpdate( error )
+		])
+	}
+end
+
+
+rule "changeVentilationLevel"
+when
+	Item comfoairFanLevel_Message changed
+then
+	var Number newLevel = comfoairFanLevel_Message.state as DecimalType
+	
+	if( comfoairControl.state == 1 && comfoairFanLevel_Message.state != comfoairFanLevel.state ) {
+		comfoairFanLevel.sendCommand( newLevel )
+		
+		comfoairMode.postUpdate( 0 )
+		isAutoMode = false
+
+		if( newLevel > 1 ) {
+			comfoairFanMode.postUpdate( 0 )
+		}
+	} else {
+
+		if( comfoairFanLevel_Message.state != comfoairFanLevel.state ) {
+			comfoairError_Message.postUpdate( "PC control is not active" )
+			
+			createTimer(now.plusMillis( 200 ),  [ |
+				comfoairFanLevel_Message.postUpdate( comfoairFanLevel.state )
+			])
+			
+			createTimer(now.plusSeconds( 10 ),  [ |
+            var String error = "" + callScript( "comfoair_errorMsg" )
+            comfoairError_Message.postUpdate( error )
+			])
+      }
+	}
+end
+
+
+rule "changeVentilationLevelSwitch"
+when 
+    Item Delayed_Start changed to ON
     or
-    Time cron "0 0/1 * * * ?"
+    Item comfoairFanLevel changed
 then
-    if( (Lueftung_Auto_Mode.state as DecimalType) == 1 ){
+	if( comfoairFanLevel.state instanceof DecimalType ) {
+		comfoairFanLevel_Message.postUpdate( comfoairFanLevel.state )
+	}
+end
 
-        var Number day    = now.getDayOfWeek
-        var Number hour   = now.getHourOfDay
-        var Number minute = now.getMinuteOfHour
 
-        var boolean isNight = false
+rule "changeComfortTemperature"
+when
+	Item comfoairTargetTemperature_Message changed
+then
+	var Number newTemp = comfoairTargetTemperature_Message.state as DecimalType
+	
+	if( comfoairControl.state == 1 ) {
 
-        // Freitag
-        if( day == 5 ){
-            if( hour < 7 || (hour >= 23 && minute >=30) ) isNight = true
-        }
-        // Samstag
-        else if( day == 6 ){
-            if( hour < 9 || (hour >= 23 && minute >=30) ) isNight = true
-        }
-        // Sonntag
-        else if( day == 7 ){
-            if( hour < 9 || (hour >= 22 && minute >=30) || hour >= 23 ) isNight = true
-        }
-        else{
+		if( comfoairTargetTemperature_Message.state != comfoairTargetTemperature.state ) {
+			comfoairTargetTemperature.sendCommand( newTemp )
+		}
+	} else {
 
-            if( hour < 7 || (hour >= 22 && minute >=30) || hour >= 23 ) isNight = true
-        }
+		if( comfoairTargetTemperature_Message.state != comfoairTargetTemperature.state ) {
+			comfoairError_Message.postUpdate( "PC control is not active" )
+			
+			createTimer( now.plusMillis( 200 ),  [ |
+				comfoairTargetTemperature_Message.postUpdate( comfoairTargetTemperature.state )
+			])
+			
+			createTimer( now.plusSeconds( 10 ),  [ |
+            var String error = "" + callScript( "comfoair_errorMsg" )
+            comfoairError_Message.postUpdate( error )
+			])
+	   }
+	}
+end
 
-        var Number currentLevel = (Lueftung_Fan_Level.state as DecimalType)
-        var Number newLevel = 3
 
-        if( !isNight ){
+rule "changeComfortTemperatureSetpoint"
+when 
+    Item Delayed_Start changed to ON
+    or
+    Item comfoairTargetTemperature changed
+then
+	if( comfoairTargetTemperature.state instanceof DecimalType ) {
+		comfoairTargetTemperature_Message.postUpdate( comfoairTargetTemperature.state )
+	}
+end
 
-            var Number raumTemperatur = (Lueftung_Ablufttemperatur.state as DecimalType)
-            var Number aussenTemperatur = (Lueftung_Aussenlufttemperatur.state as DecimalType)
-            var Number zielTemperatur = (Lueftung_Komfortemperatur.state as DecimalType)
 
-            if(
-                raumTemperatur >= zielTemperatur
-                &&
-                aussenTemperatur >= raumTemperatur
-            ){
+rule "AutoProgram"
+when
+	Item comfoairMode changed
+	or
+	Time cron "0 0/1 * * * ?"
+then
+	if( comfoairControl.state instanceof DecimalType && comfoairMode.state instanceof DecimalType && comfoairFanLevel.state instanceof DecimalType ) {
+		var Number day    = now.getDayOfWeek
+		var Number hour   = now.getHourOfDay
+		var Number minute = now.getMinuteOfHour
+	
+	    if( comfoairControl.state == 1 && comfoairMode.state == 1 ) {
+			var Number currentLevel = comfoairFanLevel.state as DecimalType
+			var Number newLevel
+			
+			// Summer energy time - from 1.04 to 30.09
+			if( EnergySummerTime.state == ON ) {
 
-                newLevel = 1
-            }
-            else if(
-                raumTemperatur >= zielTemperatur - 1
-                &&
-                aussenTemperatur >= raumTemperatur - 1
-                &&
-                currentLevel == 1
-            ){
+				// First set level 1 and 2
 
-                newLevel = 1
-            }
-        }
-        else if( Fenster_OG_Schlafzimmer.state == CLOSED || Fenster_OG_Ankleide.state == OPEN ) {
+				// All days a week
+				// if you want Monday to Friday remove day==6 and day==7
+				if( day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7 ) {
+		        	
+					// Level 2 : 5:00 - 7:00, 16:00 - 23:00, level 1 : in the other time
+					if( ( hour >= 5 && hour < 7 )
+						||
+						( hour >= 16 && hour < 23 )
+					) {
+						newLevel = 3
+					} else newLevel = 2
+				
+				// Saterdey and Sunday
+				} else if( day == 6 || day == 7 ) {
+			        
+					if( ( hour >= 12 && hour < 14 )
+					) {
+						newLevel = 3
+					} else newLevel = 2
+				}
 
-            newLevel = 2
-        }
+				// Now set level 3
 
-        if( newLevel != currentLevel ){
+				// All days a week
+				if( day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7 ) {
+		        	
+					// Level 3 : 13:00 - 13:30
+					if( ( hour == 13 && minute < 30 )
+					) {
+						newLevel = 4
+					}
+				}
+			
+			// Winter energy time - from 1.10 to 31.03
+			} else {
 
-            if( newLevel == 1 ){
+				// All days a week
+				// podwyzszenie 0:00-2:00, 3:00-5:00, 7:00-8:00, 10:00-11:00, 13:00-15:00, 16:30- 18:30, 20:00-21:00, 22:00-23:00
+				if( day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7 ) {
+		        	
+					// Level 2 : 6:00 - 8:00, 16:00 - 21:00, level 1 : in the other time
+					if( ( hour >= 6 && hour < 8 )
+						||
+						( hour >= 16 && hour < 21 )
+					) {
+						newLevel = 3
+					} else newLevel = 2
+				
+				// Saterdey and Sunday
+				} else if( day == 6 || day == 7 ) {
+			        
+					if( ( hour >= 12 && hour < 14 )
+					) {
+						newLevel = 3
+					} else newLevel = 2
+				}
 
-                logInfo("airflow.rules", "auto slowdown start")
-                    send("test@gmail.com", "Lüftung verlangsamt")
-            }
-            else if( currentLevel == 1 ){
+				// Now set level 3
 
-                    logInfo("airflow.rules", "auto slowdown end")
-                send("test@gmail.com", "Lüftung wieder normal")
-            }
+				// All days a week
+				if( day == 1 || day == 2 || day == 3 || day == 4 || day == 5 || day == 6 || day == 7 ) {
+		        	
+					// Level 3 : 13:00 - 13:30
+					if( ( hour == 13 && minute < 30 )
+					) {
+						newLevel = 4
+					}
+				}
+			}
 
-            autoChangeInProgress=true
-            sendCommand(Lueftung_Fan_Level,newLevel)
-        }
-    }
+			if( newLevel != currentLevel ) {
+				comfoairFanLevel.sendCommand( newLevel )
+				isAutoMode = true
+				comfoairFanMode.postUpdate( 0 )
+			}
+	        
+			logInfo( "comfoair", "ComfoAir - AUTO Mode" )
+
+		} else logInfo( "comfoair", "ComfoAir - MANUAL Mode" )
+	}
 end
 ```
