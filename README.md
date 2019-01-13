@@ -418,6 +418,8 @@ sitemap comfoair label="ComfoAir" {
 }
 ```
 
+![comfoair sitemap](comfoair-sitemap.jpg)
+
 rules/comfoair.rules
 
 ```Xtend
