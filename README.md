@@ -376,7 +376,7 @@ Items {
 
 sitemaps/comfoair.sitemap
 
-```Xtend
+```
 sitemap comfoair label="ComfoAir" {
 	Frame label="Main" {
 		Text item=comfoairError_Message labelcolor=[!="OK"="red"] valuecolor=[!="OK"="red"]
