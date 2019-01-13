@@ -213,8 +213,6 @@ If the original file is in a version other than 1.13.0, the name of the copied f
 
 Now you can install ComfoAir binding (Paper UI > Add-ons > Bindings > ComfoAir - install).
 
-### The description below is very similar to the original *ComfoAir binding* readme file by Holger Hees.
-
 ## Binding Configuration
 
 You can configure this binding in the file `services/comfoair.cfg`.
@@ -378,7 +376,7 @@ Items {
 
 sitemaps/comfoair.sitemap
 
-```
+```Xtend
 sitemap comfoair label="ComfoAir" {
 	Frame label="Main" {
 		Text item=comfoairError_Message labelcolor=[!="OK"="red"] valuecolor=[!="OK"="red"]
