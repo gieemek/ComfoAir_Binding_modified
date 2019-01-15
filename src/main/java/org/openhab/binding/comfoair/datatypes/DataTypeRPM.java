@@ -16,7 +16,7 @@ import org.openhab.core.types.State;
  * Class to handle temperature values
  *
  * @author Grzegorz Miasko
- * @since 1.12.0
+ * @since 1.14.0
  */
 public class DataTypeRPM implements ComfoAirDataType {
 
