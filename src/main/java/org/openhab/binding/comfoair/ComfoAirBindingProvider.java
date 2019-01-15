@@ -22,7 +22,7 @@ import org.openhab.core.binding.BindingProvider;
  * @author Holger Hees
  * @since 1.3.0
  * @author Grzegorz Miasko
- * @since 1.12.0
+ * @since 1.14.0
  */
 public interface ComfoAirBindingProvider extends BindingProvider {
 
