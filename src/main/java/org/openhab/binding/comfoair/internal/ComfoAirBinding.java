@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * @author Holger Hees
  * @since 1.3.0
  * @author Grzegorz Miasko
- * @since 1.12.0
+ * @since 1.14.0
  */
 public class ComfoAirBinding extends AbstractActiveBinding<ComfoAirBindingProvider> implements ManagedService {
 
