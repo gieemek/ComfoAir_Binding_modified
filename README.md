@@ -261,7 +261,7 @@ items/comfoair.items
 
 ```
 // Comfo Air
-Group		ComfoAir			"ComfoAir"					<recu>		(devices)
+Group	ComfoAir				"ComfoAir"					<recu>		(devices)
 
 // Temperatures chart
 Group	comfoairTemps_Chart									<temperature>	(ComfoAir)
@@ -287,7 +287,7 @@ Number	comfoairErrorReset			"Error reset"					<service>	(ComfoAir)			{comfoair="
 Number	comfoairFilterReset			"Filter reset"					<service>	(ComfoAir)			{comfoair="filter_reset"}
 Number	comfoairMode				"Manual - Auto [%d]"				<controlMode>	(ComfoAir)
 Switch	comfoairControl_Switch			"Activate"					<control>	(ComfoAir)
-Number	comfoairFilterPeriod			"Filter period [%d weeks]"			<zegar>		(ComfoAir)			{comfoair="filter_period"}
+Number	comfoairFilterPeriod			"Filter period [%d weeks]"			<clock>		(ComfoAir)			{comfoair="filter_period"}
 Number	comfoairChimney				"Fire programme [%d]"				<climate>	(ComfoAir)			{comfoair="is_chimney"}
 Number	comfoairPreheater			"Preheater [MAP(comfoair_is-not.map):%s]"	<climate>	(ComfoAir)			{comfoair="is_preheater"}
 Number	comfoairCookerHood			"Extractor hood [MAP(comfoair_is-not.map):%s]"	<climate>	(ComfoAir)			{comfoair="is_cookerhood"}
@@ -313,6 +313,8 @@ Number	comfoairIndoorOutgoingTemperature	"Return air temperature [%.1f °C]"		<t
 Number	comfoairOutdoorOutgoingTemperature	"Exhaust air temperature [%.1f °C]"		<temperature>	(ComfoAir, comfoairTemps_Chart)	{comfoair="outdoor_outgoing_temperatur"}
 Number	comfoairIncomingFan			"Supply capacity [%d %%]"			<fan_in>	(ComfoAir)			{comfoair="incomming_fan"}
 Number	comfoairOutgoingFan			"Exhaust capasity [%d %%]"			<fan_out>	(ComfoAir)			{comfoair="outgoing_fan"}
+Number	comfoairFanIn0				"Supply capacity - level 0 [%d %%]"		<fan_in>	(ComfoAir)			{comfoair="fan_in_0"}
+Number	comfoairFanOut0				"Exhaust capasity - level 0 [%d %%]"		<fan_out>	(ComfoAir)			{comfoair="fan_out_0"}
 Number	comfoairEfficiency			"Efficiency [%.1f %%]"				<efficiency>	(ComfoAir)
 Number	comfoairBypassMode			"Bypass [MAP(comfoair_bypass.map):%s]"		<climate>	(ComfoAir)			{comfoair="bypass_mode"}
 Number	comfoairEWTMode 			"EWT [MAP(comfoair_on-off.map):%s]"		<climate>	(ComfoAir)			{comfoair="ewt_mode"}
