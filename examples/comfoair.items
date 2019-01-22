@@ -23,6 +23,7 @@ Number	comfoairFanMode_Message					"Supply / Exhaust [%d]"									<fan_in>			(C
 Number	comfoairTargetTemperature_Message	"Comfort temperature [%.1f °C]"						<temperature>	(ComfoAir)
 Number	comfoairErrorReset						"Error reset"												<service>		(ComfoAir)								{comfoair="error_reset"}
 Number	comfoairFilterReset						"Filter reset"												<service>		(ComfoAir)								{comfoair="filter_reset"}
+Number	comfoairReset								"Reset"														<reset>			(ComfoAir)
 Number	comfoairMode								"Manual - Auto [%d]"										<controlMode>	(ComfoAir)
 Switch	comfoairControl_Switch					"Activate"													<control>		(ComfoAir)
 Number	comfoairFilterPeriod						"Filter period [%d weeks]"								<clock>			(ComfoAir)								{comfoair="filter_period"}
