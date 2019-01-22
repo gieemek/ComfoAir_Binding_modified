@@ -139,7 +139,7 @@ Menu 90 | | | |
 | control_mode | read | 0, 1 | Analogue inputs (P94)<br/>0 – off<br/>1 – on |
 | preheater_mode | read | 0, 1 | Preheater (P95)<br/>look at CC Ease commands<br/>0 – off<br/>1 – on |
 | cookerhood_mode | read | 0, 1 | Extractor hood (P96)<br/>look at CC Ease commands<br/>0 – off<br/>1 – on |
-| enthalpy_mode | read | 0, 1 | Enthalpy (P97)<br/>look at CC Ease commands<br/>0 – off<br/>1 – on<br/>2 - on with sensor |
+| enthalpy_mode | read | 0, 1, 2 | Enthalpy (P97)<br/>look at CC Ease commands<br/>0 – off<br/>1 – on<br/>2 - on with sensor |
 | Additional commands | | | |
 | filter_running | read | h | Counter of filter hours (from resseting) |
 | fan_out_efficiency | read | 0 ÷ 100 % | Efficiency of the exhaust fan |
