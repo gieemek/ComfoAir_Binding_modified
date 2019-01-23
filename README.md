@@ -1,13 +1,13 @@
 # ComfoAir Binding modified
 Expanded ComfoAir binding v.1x for openHAB based on original [org.openhab.binding.comfoair](https://github.com/openhab/openhab1-addons/wiki/comfo-air-binding) v. 1.3.0 written by Holger Hees.
 
+This binding was tested with the Zehnder ComfoAir 350 device. Most commands should work with: ComfoAir 550, WHR930 of StorkAir, G90-380 by Wernig and Santos 370 DC to Paul.
+
 ## What's new in this binding ?
 
 Many new commands (read and write) have been added in this binding. The program code was also changed so the sending of the write commands is possible and did not cause problems with the operation of the device.<br/>
 Original binding provided 22 commands, including 5 write commands only (eg it allowed to control ventilation levels and reset errors).
 This new binding provides 160 commands, including 71 write commands. This gives you the ability to control all ComfoAir settings, available in menus 10 - 90, and even more. This allows for full control of the device.
-
-This binding was tested with the Zehnder ComfoAir 350 ventilation system. As original binding it should work with ComfoAir 550, WHR930 of StorkAir, G90-380 by Wernig and Santos 370 DC to Paul.
 
 ### List of commands (original and new ones).
 
@@ -193,7 +193,15 @@ Menu 90 | | | |
 | RF_value | read - write | 0 ÷ 100 % | Radio control RF – set point |
 | RF_negative | read - write | 0, 1 | Radio control RF<br/>0 – positive<br/>1 – negative
 
+## Prerequisites
 
+Computer communication with the ComfoAir unit is carried out via the RS232 port on the device. You can use the PC port:
+- raspberry pi: UART port with converter RS232 to UART (3.3V)
+- raspberry pi: USB port with converter RS232 to USB
+- PC: RS232 port
+- PC: USB port with converter RS232 to USB
+
+The connection should be made with a 3-wire cable connecting pins: GND, TX, RX of RS232 sockets, but RX and TX pins should be crossed (TX of ComfoAir to RX of PC, RX of ComfoAir to TX of PC).
 
 ## How to install.
 
@@ -257,7 +265,7 @@ if `openhab` is your user.
 
 ## Examples
 
-items/comfoair.items
+`items/comfoair.items`:
 
 ```
 // Comfo Air
@@ -326,7 +334,7 @@ Number	comfoairEnthalpyMode			"Enthalpy [MAP(comfoair_on-off.map):%s]"	<climate>
 Number	comfoairFreezeMode			"Freeze [MAP(comfoair_freeze.map):%s]"		<climate>	(ComfoAir)			{comfoair="freeze_mode"}
 ```
 
-transform/comfoair_bypass.map
+`transform/comfoair_bypass.map`:
 
 ```
 1=Opened
@@ -335,7 +343,7 @@ undefined=unknown
 -=unknown
 ```
 
-transform/comfoair_on-off.map
+`transform/comfoair_on-off.map`:
 
 ```
 1=On
@@ -344,7 +352,7 @@ undefined=unknown
 -=unknown
 ```
 
-transform/comfoair_is-not.map
+`transform/comfoair_is-not.map`:
 
 ```
 1=Install
@@ -353,7 +361,7 @@ undefined=unknown
 -=unknown
 ```
 
-transform/comfoair_freeze.map
+`transform/comfoair_freeze.map`:
 
 ```
 1=Frozen
@@ -362,7 +370,7 @@ undefined=unknown
 -=unknown
 ```
 
-persistence/rrd4j.persist
+`persistence/rrd4j.persist`:
 
 ```
 Strategies {
@@ -377,7 +385,7 @@ Items {
 }
 ```
 
-sitemaps/comfoair.sitemap
+`sitemaps/comfoair.sitemap`:
 
 ```
 sitemap comfoair label="ComfoAir" {
@@ -423,7 +431,7 @@ sitemap comfoair label="ComfoAir" {
 
 ![comfoair sitemap](comfoair-sitemap.jpg)
 
-rules/comfoair.rules
+`rules/comfoair.rules`:
 
 ```Xtend
 import java.lang.Math
