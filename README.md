@@ -1,4 +1,5 @@
 # ComfoAir Binding modified
+
 Expanded ComfoAir binding v.1x for openHAB based on original [org.openhab.binding.comfoair](https://github.com/openhab/openhab1-addons/wiki/comfo-air-binding) v. 1.3.0 written by Holger Hees.
 
 This binding was tested with the Zehnder ComfoAir 350 device. Most commands should work with: ComfoAir 550, WHR930 of StorkAir, G90-380 by Wernig and Santos 370 DC to Paul.
@@ -228,8 +229,7 @@ You can configure this binding in the file `services/comfoair.cfg`.
 | Property | Default | Required | Description |
 |----------|---------|:--------:|-------------|
 | port     |         |   Yes    | Serial port which is connected to the Zehnder ComfoAir system, for example `/dev/ttyS0` on Linux or `COM1` on Windows |
-| refresh  | 60000   |   No     | refresh inverval in milliseconds
-
+| refresh  | 60000   |   No     | refresh interval in milliseconds
 
 ### Example
 
@@ -369,6 +369,7 @@ undefined=unknown
 undefined=unknown
 -=unknown
 ```
+
 `transform/comfoair_enthalpy.map`:
 
 ```
