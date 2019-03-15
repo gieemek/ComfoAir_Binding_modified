@@ -88,7 +88,12 @@ public class ComfoAirConnector {
 
                 ComfoAirCommand command = ComfoAirCommandType.getChangeCommand(ComfoAirCommandType.ACTIVATE.key,
                         new DecimalType(1));
-                sendCommand(command, null);
+
+                if (command != null) {
+                    sendCommand(command, null);
+                } else {
+                    logger.debug("Failure while creating COMMAND: {}", command);
+                }
             } catch (PortInUseException e) {
                 throw new InitializationException(e);
             } catch (UnsupportedCommOperationException e) {
@@ -123,7 +128,12 @@ public class ComfoAirConnector {
 
         ComfoAirCommand command = ComfoAirCommandType.getChangeCommand(ComfoAirCommandType.ACTIVATE.key,
                 new DecimalType(0));
-        sendCommand(command, null);
+
+        if (command != null) {
+            sendCommand(command, null);
+        } else {
+            logger.debug("Failure while creating COMMAND: {}", command);
+        }
 
         IOUtils.closeQuietly(inputStream);
         IOUtils.closeQuietly(outputStream);
@@ -506,7 +516,7 @@ public class ComfoAirConnector {
     private byte[] cleanupBlock(byte[] processBuffer) {
 
         int pos = 0;
-        byte[] cleanedBuffer = new byte[50];
+        byte[] cleanedBuffer = new byte[processBuffer.length - 6];
 
         for (int i = 4; i < processBuffer.length - 2; i++) {
 
@@ -567,6 +577,9 @@ public class ComfoAirConnector {
             return true;
 
         } catch (IOException e) {
+            logger.debug("Error writing to serial port {}: {}", port, e.getLocalizedMessage());
+            return false;
+        } catch (NullPointerException e) {
             logger.debug("Error writing to serial port {}: {}", port, e.getLocalizedMessage());
             return false;
         }
